@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    android:paddingBottom="40dp"
+    android:paddingTop="20dp"
+    android:gravity="center_vertical"
+    android:background="@color/greenlight"
+    android:orientation="vertical">
+
+
+
+    <TextView
+        android:id="@+id/textview_list_helper_st_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="วันที่ฝึกปฏิบัติงาน"
+        android:textColor="@color/black"
+        android:textSize="@dimen/size18"
+        android:textStyle="bold"/>
+
+</LinearLayout>

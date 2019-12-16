@@ -1,0 +1,132 @@
+package com.example.deanaagirl.NursingDiary;
+
+import android.content.SharedPreferences;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import com.example.deanaagirl.NursingDiary.Connect.JSONObtained;
+import com.example.deanaagirl.NursingDiary.Model.ChangePassword;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import org.json.JSONObject;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.Response;
+
+public class ChangePasswordActivity extends AppCompatActivity {
+
+    private EditText edtOldpass , edtNewpass;
+    private Button btnChange;
+    private ChangePassword pass = new ChangePassword();
+    private SharedPreferences LocalStorage;
+    private String JsonDiary;
+    private JsonObject objectFromString;
+    private Gson gson = new GsonBuilder().create();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_change_password);
+
+        LocalStorage = getSharedPreferences("DATAUSER",0);
+
+        edtOldpass = findViewById(R.id.editText_oldpass);
+        edtNewpass = findViewById(R.id.editText_newpass);
+        btnChange = findViewById(R.id.button_change);
+        edtNewpass.addTextChangedListener(ChangPass);
+        edtOldpass.addTextChangedListener(ChangPass);
+
+    }
+    private TextWatcher ChangPass = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int i, int before, int count) {
+
+            String oldPass = edtOldpass.getText().toString().trim();
+            String newPass = edtNewpass.getText().toString().trim();
+            btnChange.setEnabled(!oldPass.isEmpty() && !newPass.isEmpty());
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            btnChange.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    HttpUrl httpUrl = HttpUrl.parse(JSONObtained.BASE_URL + "/api/Student/ChangePasswordStudent");
+                    JSONObject jsonObject = new JSONObject();
+
+                    String passwordNew = edtNewpass.getText().toString();
+                    String passwordOld = edtOldpass.getText().toString();
+                    String studentId = LocalStorage.getString("id","0");
+
+                    try {
+                        pass.setPasswordNew(passwordNew);
+                        pass.setPasswordOld(passwordOld);
+                        pass.setStudentId(studentId);
+
+                        JsonDiary = gson.toJson(pass);
+                        JsonParser jsonParser = new JsonParser();
+                        objectFromString = jsonParser.parse(JsonDiary).getAsJsonObject();
+
+
+                        jsonObject.put("studentId", studentId);
+                        jsonObject.put("passwordNew", passwordNew);
+                        jsonObject.put("passwordOld", passwordOld);
+
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    JSONObtained.getInstance().newCall(JSONObtained.postJSON(httpUrl, objectFromString)).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(Call call, final IOException e) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                        Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+
+                            final String json = response.body().string();
+                            final Boolean reback = Boolean.valueOf(json);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (reback == false){
+                                        Toast.makeText(ChangePasswordActivity.this, "รหัสผ่านเก่าไม่ถูกต้อง", Toast.LENGTH_SHORT).show();
+                                    }else {
+                                        Toast.makeText(ChangePasswordActivity.this, "เปลี่ยนรหัสผ่านแล้ว", Toast.LENGTH_SHORT).show();
+                                    }
+//                                      Toast.makeText(getApplicationContext(), json, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    });
+
+                }
+            });
+
+        }
+    };
+
+}
